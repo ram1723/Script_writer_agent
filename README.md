@@ -1,4 +1,4 @@
-# Script Writer — AI-assisted Script Generation Pipeline
+# Script Writer — AI-assisted Script Writer Pipeline
 
 **One-line:** A modular LangGraph + Google GenAI pipeline that turns a single logline into a formatted screenplay draft, with critique-and-optimize cycles.
 
