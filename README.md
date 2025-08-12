@@ -2,4 +2,4 @@
 
 A writer agent that writes an entire script with a single prompt.
 
-A small prototype is achiveved with the current code in the repo..Still in progress fro developements and improvements
+A prototype of script writing, where in the logline is given as the prompt and the first_draft is drawn of the script then the critique and the evaluator comes in play, again optimizing the script and everything.
