@@ -43,91 +43,68 @@ The graph in the notebook contains (but is not limited to) these nodes:
 
 ## Dependencies
 
-The notebook installs and/or expects these Python packages:
+The notebook installs and/or expects these Python packages (used in the included cells):
 
 ```bash
 pip install -U langgraph langchain_community langchain_core tavily-python langchain_nvidia_ai_endpoints
 pip install -U "google-genai>=1.16.0"
-The notebook also imports google.genai and uses:
-
-python
-Copy
-Edit
-client = genai.Client(api_key=...)
-Setup
+```
+## Setup
 1) Google API key
-Colab: uses google.colab.userdata to fetch GOOGLE_API_KEY. Set via the Colab UI or replace with os.environ code.
+Colab: the notebook fetches GOOGLE_API_KEY using google.colab.userdata. If you run in Colab, set the key using the Colab UI snippet or replace that line to read from environment variables.
 
-Local:
+Locally: export your key before running:
 
-bash
-Copy
-Edit
+```bash
+
 export GOOGLE_API_KEY="your-key-here"
-python
-Copy
-Edit
+Then in code, create the client:
+```
+```python
+
 from google import genai
 import os
 client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
-2) Install dependencies
-Run the pip commands above. A virtual environment is recommended.
+```
+##Usage
+Provide an initial logline (string). Example used in the notebook:
 
-3) Model & cost
-Uses gemini-2.5-flash. Multiple iterations or large prompts may incur cost.
+```python
 
-Usage (quick)
-Provide an initial logline:
-
-python
-Copy
-Edit
-initial_state = {
-    "logline": "A young genius prodigy interrupts a series of meteor strikes; he fights them with his friends and saves the city."
-}
+initial_state = {"logline": "A young genius prodigy interrupts a series of meteor strikes; he fights them with his friends and saves the city."}
 Invoke the graph:
+```
+```python
 
-python
-Copy
-Edit
+# assuming `graph` is constructed as in the notebook
 output = graph.invoke(initial_state)
 print(output.get("first_draft"))
-Low-scoring drafts are iteratively optimized until they meet the threshold.
+```
+If enabled, the pipeline will run evaluation and optimization cycles. If a revised_draft scores below threshold, the pipeline will assign first_draft = revised_draft and continue review.
 
 How to customize
-Prompts: Edit PromptTemplate text to change tone, constraints, or length.
+Edit prompts: All prompt text is defined using PromptTemplate instances in the notebook. Update the templates to change tone, length, or constraints.
 
-Threshold: Change inside scoring() (default 75.0).
+Change threshold: Edit the numeric threshold inside scoring() to make acceptance easier or stricter (default 75.0).
 
-Nodes: Add/remove in StateGraph via add_node() and change edges.
+Add / reorder nodes: The graph uses StateGraph (langgraph.graph.StateGraph) — add or remove nodes using g.add_node(...) and change edges as needed.
 
-Models: Swap gemini-2.5-flash for others supported by your account.
+Switch models: Replace gemini-2.5-flash with other model identifiers supported by your account (be mindful of token limits and costs).
 
-Implementation notes
-Multiple helper function versions exist — consider cleanup for production.
+Important implementation notes
+The notebook contains multiple copies/versions of similarly named helper functions — this is normal during iterative development, but consider cleaning duplicates before turning the code into a reusable module.
 
-The evaluator defensively parses JSON scorecards; falls back if parsing fails.
+The evaluator attempts to parse JSON scorecards from the model output. Because model text can be noisy, parsing is defensive: if it cannot extract the JSON scores, the code falls back gracefully.
 
-scoring() extracts numeric value (0–100) and compares to threshold.
+The scoring() function extracts the first numeric value in the model reply and constrains it to [0, 100]. It then compares to the configured threshold and, if below threshold, assigns the revised_draft back to first_draft so the optimizer may re-run.
 
-convert_script_format expects JSON scenes array.
+The convert_script_format node uses a separate prompt that expects a JSON array representing scenes and outputs a conventional screenplay layout. Keep the JSON format stable if you modify the scene generator.
 
-Running outside Colab
-Replace google.colab.userdata with environment variable reading.
-Ensure network access and correct authentication.
+## Next steps / ideas
+Add a simple web UI (Streamlit or Gradio) to input loglines and show iterative drafts.
 
-Limitations & safety
-LLM outputs may hallucinate, produce unsafe content, or have bias.
+Export final screenplay to PDF or Fountain format.
 
-Add human review before production.
+Add fine-grained unit tests for prompt outputs (e.g., JSON extraction) and defensive checks for missing fields.
 
-Avoid generating scripts too close to copyrighted works.
-
-Next steps
-Web UI (Streamlit/Gradio) for input and iteration.
-
-Export to PDF/Fountain.
-
-Unit tests for prompt outputs and JSON stability.
-
-TTS read-through with Gemini TTS.
+Integrate TTS (Gemini TTS preview) for a quick audio read-through of scenes.
